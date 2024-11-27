@@ -1,5 +1,6 @@
 import tkinter as tk
-import datetime
+import datetime as dt
+import uuid
 from tkinter import ttk, messagebox
 from reportlab.pdfgen import canvas
 
@@ -96,6 +97,20 @@ class TilangApp:
         self.ptg_entry = tk.Entry(frame_right)
         self.ptg_entry.pack(fill="x", anchor="w", padx=10, pady=2)
 
+        # riwayat
+        rwy_frame = tk.Label(frame_right, text="RIWAYAT TIKET", font=self.default_font)
+        rwy_frame.pack(fill="both", padx=10, pady=5)
+
+        self.rwy_preview = ttk.Treeview(rwy_frame, columns=("No Tiket", "Nama Terdakwa", "Pelanggaran"), show="headings")
+        self.rwy_preview.heading("No Tiket", text="No Tiket")
+        self.rwy_preview.heading("Nama Terdakwa", text="Nama Terdakwa")
+        self.rwy_preview.heading("Pelanggaran", text="Pelanggaran")
+        self.rwy_preview.pack(fill="x", expand=True, padx=10, pady=10)
+
+        # Tombol Cetak
+        ctk_button = tk.Button(frame_right, text="CETAK TIKET")
+        ctk_button.pack(padx=10, pady=5, anchor="e")
+
     # Fungsi
     def update_pelanggaran(self, event):
         kendaraan = self.jnk_menu.get()
@@ -107,12 +122,19 @@ class TilangApp:
         }
 
         if kendaraan in pelanggaran:
-            pelanggaran_list = [f"{plg[0]} - Denda: {plg[1]}" for plg in list(pelanggaran[kendaraan])]
+            pelanggaran_list = [f"{plg[0]} - Denda : RP.{plg[1]:,}" for plg in list(pelanggaran[kendaraan])]
             self.plg_menu['values'] = pelanggaran_list
             self.plg_menu.set('') #Reset Pilihan
 
-
-
+    def nomor_tiket(self):
+        now = dt.date.today().strftime("%d/%m/%Y")
+        return f"TILANG-{now}-{str(uuid.uuid4())[:4]}"
+    
+    def pdf(self):
+        no_tiket = self.nomor_tiket()
+        pdf = canvas.Canvas(filename="tikettilang.pdf")
+        pdf.setTitle(title=f"tiket_tilang_{no_tiket()}")
+        pdf.drawString(270,770, "Test")
 
 if __name__ == "__main__":
     root = tk.Tk()
