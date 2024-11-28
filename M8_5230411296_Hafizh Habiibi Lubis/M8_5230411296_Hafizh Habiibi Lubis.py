@@ -8,9 +8,11 @@ class TilangApp:
     def __init__(self, root):
         self.root = root
         self.root.title("SITILANG ODNI")
-        self.root.geometry("1280x720")
+        self.root.geometry("1366x768")
         self.root.configure(bg = "white")
 
+        self.cek_nik = []
+        self.cek_plat = []
         self.default_font = ("Courier New", 10)
         self.widget_create()
     
@@ -175,9 +177,24 @@ class TilangApp:
             messagebox.showerror("ERROR", "PASTIKAN SEMUA DATA TERISI!")
             return
         
+        # Validasi Format NIK
         if not nik_terdakwa.isdigit() or len(nik_terdakwa) != 5:
             messagebox.showerror("ERROR", "NIK TERDAKWA HARUS ANGKA DAN BERJUMLAH 5 DIGIT!")
             return
+        
+        # Validasi NIK
+        if nik_terdakwa in self.cek_nik:
+            messagebox.showerror("ERROR", "NIK TERDAKWA SUDAH ADA!")
+            return
+        
+        # Validasi Plat
+        if plat_kendaraan in self.cek_plat:
+            messagebox.showerror("ERROR", "NOMOR PLAT SUDAH ADA!")
+            return
+            
+        # Simpan NIK dan Plat setelah semuanya valid
+        self.cek_plat.append(plat_kendaraan)
+        self.cek_nik.append(nik_terdakwa)
 
         # Hapus Isi Form Setelah Pencet Tombol Cetak Tiket 
         self.name_var.set("")
