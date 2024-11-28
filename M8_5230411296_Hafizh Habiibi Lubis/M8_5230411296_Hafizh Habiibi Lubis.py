@@ -8,7 +8,7 @@ class TilangApp:
     def __init__(self, root):
         self.root = root
         self.root.title("SITILANG ODNI")
-        self.root.geometry("1240x720")
+        self.root.geometry("1280x720")
         self.root.configure(bg = "white")
 
         self.default_font = ("Courier New", 10)
@@ -91,11 +91,17 @@ class TilangApp:
         td_menu = tk.Label(frame_right, text="MENU PETUGAS", font=("Courier New", 12, "bold"))
         td_menu.pack(anchor="center", pady=20)
 
-        # Jenis Pelanggaran
-        plg_label = tk.Label(frame_right, text="JENIS PELANGGARAN", font=self.default_font)
+        # Jenis Pelanggaran 1
+        plg_label = tk.Label(frame_right, text="JENIS PELANGGARAN 1", font=self.default_font)
         plg_label.pack(anchor="w", padx=10, pady=8)
         self.plg_menu = ttk.Combobox(frame_right, font=self.default_font)
         self.plg_menu.pack(fill="x", anchor="w", padx=10, pady=2)
+
+        # Jenis Pelanggaran 2
+        plg_label2 = tk.Label(frame_right, text="JENIS PELANGGARAN 2", font=self.default_font)
+        plg_label2.pack(anchor="w", padx=10, pady=5)
+        self.plg_menu2 = ttk.Combobox(frame_right, font=self.default_font)
+        self.plg_menu2.pack(fill="x", anchor="w", padx=10, pady=2)
 
         # Nama Petugas
         ptg_label = tk.Label(frame_right, text="NAMA PETUGAS", font=self.default_font)
@@ -108,10 +114,11 @@ class TilangApp:
         rwy_frame = tk.Label(frame_right, text="RIWAYAT TIKET", font=self.default_font)
         rwy_frame.pack(fill="both", padx=10, pady=5)
 
-        self.rwy_preview = ttk.Treeview(rwy_frame, columns=("No Tiket", "Nama Terdakwa", "Pelanggaran"), show="headings")
+        self.rwy_preview = ttk.Treeview(rwy_frame, columns=("No Tiket", "Nama Terdakwa", "Pelanggaran", "Pelanggaran 2"), show="headings")
         self.rwy_preview.heading("No Tiket", text="No Tiket")
         self.rwy_preview.heading("Nama Terdakwa", text="Nama Terdakwa")
         self.rwy_preview.heading("Pelanggaran", text="Pelanggaran")
+        self.rwy_preview.heading("Pelanggaran 2", text="Pelanggaran 2")
         self.rwy_preview.pack(fill="x", expand=True, padx=10, pady=10)
 
         # Tombol Cetak
@@ -135,7 +142,11 @@ class TilangApp:
         if kendaraan in pelanggaran:
             pelanggaran_list = [f"{plg[0]} - Denda : RP.{plg[1]:,}" for plg in list(pelanggaran[kendaraan])]
             self.plg_menu['values'] = pelanggaran_list
-            self.plg_menu.set('') #Reset Pilihan
+            self.plg_menu2['values'] = pelanggaran_list
+
+            #Reset Pilihan ketika pilihan jenis kendaraan berubah
+            self.plg_menu.set('') 
+            self.plg_menu2.set('')
 
     def nomor_tiket(self):
         now = dt.date.today().strftime("%d-%m-%Y")
@@ -155,6 +166,7 @@ class TilangApp:
         merk_kendaraan = self.mrk_entry.get()
         seri_kendaraan = self.seri_entry.get()
         pelanggaran = self.plg_menu.get()
+        pelanggaran2 = self.plg_menu2.get()
         nama_petugas = self.ptg_entry.get()
 
         # Validasi Form Kosong
@@ -175,6 +187,9 @@ class TilangApp:
         self.mrk_var.set("")
         self.seri_var.set("")
         self.ptg_var.set("")
+        self.plg_menu.set("")
+        self.plg_menu2.set("")
+        self.jnk_menu.set("")
 
         # Header
         pdf.setFont('Courier', 20)
@@ -197,20 +212,22 @@ class TilangApp:
         pdf.drawString(100, 570, f"Merk: {merk_kendaraan}")
         pdf.drawString(100, 550, f"Seri: {seri_kendaraan}")
         pdf.drawString(100, 530, f"Pelanggaran: {pelanggaran}")
+        if pelanggaran2:
+            pdf.drawString(100, 510, f"Pelanggaran 2: {pelanggaran2}")
 
         pdf.setFont('Courier',15)
-        pdf.drawString(140, 480, "SEGERA BAYARKAN UANG DENDA KE PETUGAS :)")
+        pdf.drawString(140, 460, "SEGERA BAYARKAN UANG DENDA KE PETUGAS :)")
 
         # Footer
         pdf.setFont('Courier', 12)
-        pdf.drawString(420, 440, "PETUGAS")
-        pdf.drawString(420, 420, f"{nama_petugas}")
-        pdf.drawString(100,400, "="*60)
+        pdf.drawString(420, 420, "PETUGAS")
+        pdf.drawString(420, 400, f"{nama_petugas}")
+        pdf.drawString(100,380, "="*60)
 
         pdf.save()
 
         # tambah ke treeview
-        self.rwy_preview.insert("", "end", values=(no_tiket, nama_terdakwa, pelanggaran))
+        self.rwy_preview.insert("", "end", values=(no_tiket, nama_terdakwa, pelanggaran, pelanggaran2))
 
     # Hapus Isi Treeview + Validasi
     def hapus_riwayat(self):
