@@ -127,7 +127,7 @@ class TilangApp:
         kendaraan = self.jnk_menu.get()
 
         pelanggaran = {
-            "Motor":[("Surat Tidak Lengkap", 150000), ("Tidak Pakai Helem", 100000), ("Plat tidak standar", 100000)],
+            "Motor":[("Surat Tidak Lengkap", 150000), ("Tidak Pakai Helm", 100000), ("Plat Tidak Standar", 100000)],
             "Mobil":[("Surat Tidak Lengkap", 250000), ("Tidak Pakai Seatbelt", 120000), ("Kebut Kebutan", 200000)],
             "Truck":[("Surat Tidak Lengkap", 350000), ("Tidak Pakai Seatbelt", 220000), ("Muatan Berlebih", 300000)]
         }
@@ -138,13 +138,13 @@ class TilangApp:
             self.plg_menu.set('') #Reset Pilihan
 
     def nomor_tiket(self):
-        now = dt.date.today().strftime("%d/%m/%Y")
+        now = dt.date.today().strftime("%d-%m-%Y")
         return f"TILANG-{now}-{str(uuid.uuid4())[:4]}"
     
     def buat_pdf(self):
         no_tiket = self.nomor_tiket()
-        pdf = canvas.Canvas(filename="tikettilang.pdf")
-        pdf.setTitle(title=f"tiket_tilang_{no_tiket}")
+        pdf = canvas.Canvas(filename=f"tikettilang_{no_tiket}.pdf")
+        pdf.setTitle(title=f"tikettilang_{no_tiket}")
 
         # Ambil Value Semua Entry / Combobox
         nama_terdakwa = self.name_entry.get()
