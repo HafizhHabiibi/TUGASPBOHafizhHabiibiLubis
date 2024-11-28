@@ -182,6 +182,12 @@ class TilangApp:
             messagebox.showerror("ERROR", "NIK TERDAKWA HARUS ANGKA DAN BERJUMLAH 5 DIGIT!")
             return
         
+        # Validasi Pelanggaran
+        if pelanggaran == pelanggaran2:
+            messagebox.showerror("ERROR", "INPUTAN PELANGGARAN HARUS BERBEDA!")
+            self.plg_menu2.set('')
+            return
+        
         # Validasi NIK
         if nik_terdakwa in self.cek_nik:
             messagebox.showerror("ERROR", "NIK TERDAKWA SUDAH ADA!")
