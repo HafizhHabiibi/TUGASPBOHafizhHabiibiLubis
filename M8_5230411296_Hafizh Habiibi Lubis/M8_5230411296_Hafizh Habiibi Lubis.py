@@ -108,8 +108,12 @@ class TilangApp:
         self.rwy_preview.pack(fill="x", expand=True, padx=10, pady=10)
 
         # Tombol Cetak
-        ctk_button = tk.Button(frame_right, text="CETAK TIKET")
-        ctk_button.pack(padx=10, pady=5, anchor="e")
+        ctk_button = tk.Button(frame_right, text="CETAK TIKET", width=50)
+        ctk_button.pack(padx=10, pady=5, anchor="center")
+
+        # Tombol Hapus Riwayat
+        reset_button = tk.Button(frame_right, text="RESET", width=50)
+        reset_button.pack(padx=10, pady=10, anchor="center")
 
     # Fungsi
     def update_pelanggaran(self, event):
