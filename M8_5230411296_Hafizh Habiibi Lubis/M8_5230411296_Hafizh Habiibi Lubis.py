@@ -162,6 +162,10 @@ class TilangApp:
                     plat_kendaraan, merk_kendaraan, seri_kendaraan, nama_petugas]):
             messagebox.showerror("ERROR", "PASTIKAN SEMUA DATA TERISI!")
             return
+        
+        if not nik_terdakwa.isdigit() or len(nik_terdakwa) != 5:
+            messagebox.showerror("ERROR", "NIK TERDAKWA HARUS ANGKA DAN BERJUMLAH 5 DIGIT!")
+            return
 
         # Hapus Isi Form Setelah Pencet Tombol Cetak Tiket 
         self.name_var.set("")
