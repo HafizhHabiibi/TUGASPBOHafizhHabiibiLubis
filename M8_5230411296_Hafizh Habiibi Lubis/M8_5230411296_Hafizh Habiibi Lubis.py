@@ -236,6 +236,7 @@ class TilangApp:
         self.plg_menu2.set("")
         self.jnk_menu.set("")
 
+        # menghitung total denda
         denda_1 = self.ekstrak_denda(pelanggaran)
         denda_2 = self.ekstrak_denda(pelanggaran2) if pelanggaran2 else 0
         total_denda = denda_1 + denda_2
@@ -274,8 +275,7 @@ class TilangApp:
         pdf.drawString(420, 390, "PETUGAS")
         pdf.drawString(420, 370, f"{nama_petugas}")
         pdf.drawString(100,350, "="*60)
-
-
+        
         pdf.save()
 
         # tambah ke treeview
