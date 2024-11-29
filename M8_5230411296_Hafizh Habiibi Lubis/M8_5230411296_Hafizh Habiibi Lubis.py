@@ -104,6 +104,7 @@ class TilangApp:
         plg_label2.pack(anchor="w", padx=10, pady=5)
         self.plg_menu2 = ttk.Combobox(frame_right, font=self.default_font)
         self.plg_menu2.pack(fill="x", anchor="w", padx=10, pady=2)
+        self.plg_menu2.bind("<<ComboboxSelected>>", self.cek_pelanggaran1)
 
         # Nama Petugas
         ptg_label = tk.Label(frame_right, text="NAMA PETUGAS", font=self.default_font)
@@ -122,6 +123,12 @@ class TilangApp:
         self.rwy_preview.heading("Pelanggaran", text="Pelanggaran")
         self.rwy_preview.heading("Pelanggaran 2", text="Pelanggaran 2")
         self.rwy_preview.pack(fill="x", expand=True, padx=10, pady=10)
+
+        # Setting ke tengah
+        self.rwy_preview.column("No Tiket", anchor="center")
+        self.rwy_preview.column("Nama Terdakwa", anchor="center")
+        self.rwy_preview.column("Pelanggaran", anchor="center")
+        self.rwy_preview.column("Pelanggaran 2", anchor="center")
 
         # Tombol Cetak
         ctk_button = tk.Button(frame_right, text="CETAK TIKET", width=50, command=self.buat_pdf)
@@ -150,9 +157,24 @@ class TilangApp:
             self.plg_menu.set('') 
             self.plg_menu2.set('')
 
+    def cek_pelanggaran1(self, event):
+        if not self.plg_menu.get():
+            messagebox.showerror("ERROR", "HARAP ISI PELANGGARAN 1 TERLEBIH DAHULU!")
+            self.plg_menu2.set('')
+
     def nomor_tiket(self):
         now = dt.date.today().strftime("%d-%m-%Y")
         return f"TILANG-{now}-{str(uuid.uuid4())[:4]}"
+    
+    # Ekstrak Denda dari Pelanggaran
+    def ekstrak_denda(self, pelanggaran):
+        if "Denda : RP." in pelanggaran:
+            try:
+                # Mengambil angka setelah "Denda : RP."
+                return int(pelanggaran.split("Denda : RP.")[-1].replace(",", ""))
+            except ValueError:
+                return 0  # Jika format tidak sesuai, anggap denda 0
+        return 0
     
     def buat_pdf(self):
         no_tiket = self.nomor_tiket()
@@ -214,6 +236,10 @@ class TilangApp:
         self.plg_menu2.set("")
         self.jnk_menu.set("")
 
+        denda_1 = self.ekstrak_denda(pelanggaran)
+        denda_2 = self.ekstrak_denda(pelanggaran2) if pelanggaran2 else 0
+        total_denda = denda_1 + denda_2
+
         # Header
         pdf.setFont('Courier', 20)
         pdf.drawString(180,770, "KEPOLISIAN NEGERI ODNI") 
@@ -238,14 +264,17 @@ class TilangApp:
         if pelanggaran2:
             pdf.drawString(100, 510, f"Pelanggaran 2: {pelanggaran2}")
 
+        pdf.drawString(225, 470, f"Total Denda : RP.{total_denda:,}")
+
         pdf.setFont('Courier',15)
-        pdf.drawString(140, 460, "SEGERA BAYARKAN UANG DENDA KE PETUGAS :)")
+        pdf.drawString(140, 430, "SEGERA BAYARKAN UANG DENDA KE PETUGAS :)")
 
         # Footer
         pdf.setFont('Courier', 12)
-        pdf.drawString(420, 420, "PETUGAS")
-        pdf.drawString(420, 400, f"{nama_petugas}")
-        pdf.drawString(100,380, "="*60)
+        pdf.drawString(420, 390, "PETUGAS")
+        pdf.drawString(420, 370, f"{nama_petugas}")
+        pdf.drawString(100,350, "="*60)
+
 
         pdf.save()
 
