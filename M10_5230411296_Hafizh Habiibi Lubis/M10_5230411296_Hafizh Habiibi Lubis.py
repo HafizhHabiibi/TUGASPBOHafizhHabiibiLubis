@@ -71,11 +71,36 @@ class Pegawai:
         conn.commit()
 
 class Produk:
-    def __init__(self, kode_produk, nama_produk, jenis_produk, harga):
-        self._kode_produk = kode_produk
+    def __init__(self, nama_produk, jenis_produk, harga):
+        self._kode_produk = f"PR{str(uuid.uuid4().int)[:3]}"
         self.nama_produk = nama_produk
         self.jenis_produk = jenis_produk
         self.harga = harga
+
+    def tambah_produk(self):
+        cur.execute("""INSERT INTO produk (Kode_Produk, Nama_Produk, Jenis_Produk, Harga) 
+                    VALUES (%s, %s, %s, %s)""", (self._kode_produk, self.nama_produk, self.jenis_produk, self.harga))
+        
+        conn.commit()
+
+    @staticmethod
+    def lihat_produk():
+        cur.execute("SELECT * FROM produk")
+        list_produk = cur.fetchall()
+        print(tabulate(list_produk, headers=["Kode_Produk", "Nama_Produk", "Jenis_Produk", "Harga"], tablefmt="pretty"))
+
+    @staticmethod
+    def edit_produk(kode_produk, nama_baru, jenis_baru, harga_baru):
+        cur.execute("UPDATE produk SET Nama_Produk = %s, Jenis_Produk = %s, Harga = %s WHERE Kode_Produk = %s", (nama_baru, jenis_baru, harga_baru, kode_produk))
+        conn.commit()
+
+    @staticmethod
+    def hapus_produk(kode_produk):
+        cur.execute("DELETE FROM produk WHERE Kode_Produk = %s", (kode_produk,))
+        conn.commit()
+
+    def get_kode_produk(self):
+        return self._kode_produk
 
 class Transaksi:
     def __init__(self, no_transaksi, produk, jumlah_produk):
@@ -106,12 +131,50 @@ class Struk:
         print("="*20)
 
 def menu_produk():
-    print("="*10 + "MENU PRODUK" + "="*10)
-    print("1. Tambah Produk")
-    print("2. Lihat Produk")
-    print("3. Hapus Produk")
-    print("4. Ubah Informasi Produk")
-    print("5. Keluar")
+    while True:
+        try:
+            print("="*10 + "MENU PRODUK" + "="*10)
+            print("1. Tambah Produk")
+            print("2. Lihat Produk")
+            print("3. Hapus Produk")
+            print("4. Ubah Informasi Produk")
+            print("5. Keluar")
+
+            pilih = int(input("Masukan Pilihan Menu : "))
+
+            if pilih == 1:
+                nama_produk = str(input("Masukan Nama Produk : "))
+                jenis_produk = str(input("Masukan Jenis Produk : "))
+                harga = int(input("Masukan Harga Produk : "))
+
+                # objek produk
+                produk = Produk(nama_produk, jenis_produk, harga)
+                produk.tambah_produk()
+
+            elif pilih == 2:
+                Produk.lihat_produk()
+
+            elif pilih == 3:
+                kode_produk = str(input("Masukan Kode Produk Yang Akan Dihapus : "))
+                Produk.hapus_produk(kode_produk)
+
+            elif pilih == 4:
+                kode_produk_ubah = str(input("Masukan Kode Produk Yang Akan Diubah : "))
+                nama_baru = str(input("Masukan Nama Baru Produk : "))
+                jenis_baru = str(input("Masukan Jenis Baru Produk : "))
+                harga_baru = int(input("Masukan Harga Baru Produk : "))
+
+                Produk.edit_produk(kode_produk_ubah, nama_baru, jenis_baru, harga_baru)
+
+            elif pilih == 5:
+                return
+            
+            else:
+                print("PILIHAN MENU TIDAK TERSEDIA!!")
+
+
+        except ValueError:
+            print("INPUTAN SALAH SILAHKAN INPUT DENGAN ANGKA!!")
 
 def menu_pegawai():
     while True:
