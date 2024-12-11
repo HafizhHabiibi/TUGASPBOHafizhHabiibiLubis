@@ -1,4 +1,7 @@
 import mysql.connector
+from tabulate import tabulate
+from uuid import uuid4
+
 
 conn = mysql.connector.connect(
     user = "root",
@@ -25,20 +28,18 @@ cur = conn.cursor()
 #             Jenis_Produk VARCHAR(8),
 #             Harga INT(10))""")
 
-
 # # membuat tabel transaksi
 # cur.execute("""CREATE TABLE Transaksi (
 #             No_Transaksi CHAR(7) NOT NULL PRIMARY KEY,
-#             Detail_Transaksi VARCHAR(255))""")
+#             NIK CHAR(16) NOT NULL,
+#             Kode_Produk CHAR(5) NOT NULL,
+#             FOREIGN KEY (NIK) REFERENCES pegawai(NIK),
+#             FOREIGN KEY (Kode_Produk) REFERENCES produk(Kode_Produk))""")
 
-# membuat tabel struk membuat composite key 
-cur.execute("""CREATE TABLE Struk (
-            NIK CHAR(16) NOT NULL,
-            Kode_Produk CHAR(5) NOT NULL,
-            No_Transaksi CHAR(7) NOT NULL,
-            Jumlah_Produk INT(100),
-            Total_Harga VARCHAR(30),
-            PRIMARY KEY (NIK, Kode_Produk, No_Transaksi),
-            FOREIGN KEY (NIK) REFERENCES Pegawai(NIK),
-            FOREIGN KEY (Kode_Produk) REFERENCES Produk(Kode_Produk),
-            FOREIGN KEY (No_Transaksi) REFERENCES Transaksi(No_Transaksi))""")
+# # membuat tabel struk membuat composite key 
+# cur.execute("""CREATE TABLE Struk (
+#             No_Struk CHAR(5) NOT NULL PRIMARY KEY,
+#             No_Transaksi CHAR(7) NOT NULL,
+#             Jumlah_Produk INT(2),
+#             Total_Harga INT(10),
+#             FOREIGN KEY (No_Transaksi) REFERENCES transaksi(No_Transaksi))""")
