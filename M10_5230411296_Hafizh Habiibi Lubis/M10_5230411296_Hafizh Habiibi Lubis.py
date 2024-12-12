@@ -1,6 +1,8 @@
 import mysql.connector
 import uuid
+import datetime as dt
 from tabulate import tabulate
+
 
 conn = mysql.connector.connect(
     user = "root",
@@ -27,20 +29,21 @@ cur = conn.cursor()
 #             Jenis_Produk VARCHAR(8),
 #             Harga INT(10))""")
 
-# # membuat tabel transaksi
+# membuat tabel transaksi
 # cur.execute("""CREATE TABLE Transaksi (
 #             No_Transaksi CHAR(7) NOT NULL PRIMARY KEY,
-#             NIK CHAR(5) NOT NULL,
+#             Tanggal_Transaksi VARCHAR(20),
 #             Kode_Produk CHAR(5) NOT NULL,
-#             FOREIGN KEY (NIK) REFERENCES pegawai(NIK),
+#             Jumlah_Produk INT(2),
 #             FOREIGN KEY (Kode_Produk) REFERENCES produk(Kode_Produk))""")
 
 # # membuat tabel struk membuat composite key 
 # cur.execute("""CREATE TABLE Struk (
 #             No_Struk CHAR(5) NOT NULL PRIMARY KEY,
+#             NIK CHAR(5) NOT NULL,
 #             No_Transaksi CHAR(7) NOT NULL,
-#             Jumlah_Produk INT(2),
 #             Total_Harga INT(10),
+#             FOREIGN KEY (NIK) REFERENCES pegawai (NIK),
 #             FOREIGN KEY (No_Transaksi) REFERENCES transaksi(No_Transaksi))""")
 
 class Pegawai:
@@ -103,16 +106,18 @@ class Produk:
         return self._kode_produk
 
 class Transaksi:
-    def __init__(self, no_transaksi, produk, jumlah_produk):
-        self.no_transaksi = no_transaksi
+    def __init__(self, produk, jumlah_produk):
+        self.no_transaksi = f"TR{str(uuid.uuid4().int)[:5]}"
+        self.tanggal_transaksi = dt.date.today().strftime("%d-%m-%Y")
         self.produk = produk
         self.jumlah_produk = jumlah_produk
-        self.total_harga = 0
+        self.total_harga = produk.harga * jumlah_produk
 
-    def pembelian(self):
-        self.no_transaksi.no_transaksi = f"TR{str(uuid.uuid4()[:5])}"
-        self.total_harga = self.harga * self.jumlah_produk
-        return self.total_harga
+    def tambah_transaksi(self):
+        cur.execute("""INSERT INTO transaksi (No_Transaksi, Tanggal_Transaksi, Kode_Produk, Jumlah_Produk) VALUES (%s, %s, %s, %s)""",
+            (self.no_transaksi, self.tanggal_transaksi, self.produk.get_kode_produk(), self.jumlah_produk))
+        conn.commit()
+
 
 class Struk:
     def __init__(self, no_struk, transaksi):
@@ -172,7 +177,6 @@ def menu_produk():
             else:
                 print("PILIHAN MENU TIDAK TERSEDIA!!")
 
-
         except ValueError:
             print("INPUTAN SALAH SILAHKAN INPUT DENGAN ANGKA!!")
 
@@ -220,10 +224,44 @@ def menu_pegawai():
             print("INPUTAN SALAH SILAHKAN INPUT DENGAN ANGKA!!")
 
 def menu_transaksi():
-    print("="*10 + "MENU TRANSAKSI" + "="*10)
-    print("1. Tambah Transaksi")
-    print("2. Lihat Riwayat Transaksi")
-    print("3. Keluar")
+    while True:
+        try:
+            print("="*10 + "MENU TRANSAKSI" + "="*10)
+            print("1. Tambah Transaksi")
+            print("2. Lihat Riwayat Transaksi")
+            print("3. Keluar")
+
+            pilih = int(input("Masukan Pilihan Menu : "))
+
+            if pilih == 1:
+                kode_produk = str(input("Masukan Kode Produk : "))
+                cur.execute("SELECT * FROM produk WHERE Kode_Produk =%s", (kode_produk,))
+                data_produk = cur.fetchone()
+
+                if data_produk:
+                    nama_produk, jenis_produk, harga = data_produk[1], data_produk[2], data_produk[3]
+                    produk = Produk(nama_produk, jenis_produk, harga)
+                    produk._kode_produk = kode_produk
+                    jumlah_produk = int(input("Masukan Jumlah Produk Yang Dibeli : "))
+
+                    transaksi = Transaksi(produk, jumlah_produk)
+                    transaksi.tambah_transaksi()
+                else:
+                    print("PRODUK TIDAK DITEMUKAN!")
+
+            elif pilih == 2:
+                cur.execute("SELECT * FROM transaksi")
+                list_transaksi = cur.fetchall()
+                print(tabulate(list_transaksi, headers=["No_Transaksi", "Tanggal_Transaksi", "Kode_Produk", "Jumlah_Produk"], tablefmt="pretty"))
+
+            elif pilih == 3:
+                return
+            
+            else:
+                print("PILIHAN MENU TIDAK TERSEDIA!!")
+        
+        except ValueError:
+            print("INPUTAN SALAH SILAHKAN INPUT DENGAN ANGKA!!")
 
 def main():
     while True:
