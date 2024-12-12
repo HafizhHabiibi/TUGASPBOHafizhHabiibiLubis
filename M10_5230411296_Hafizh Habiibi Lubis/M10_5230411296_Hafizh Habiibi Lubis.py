@@ -135,24 +135,39 @@ class Transaksi:
                         (jumlah, self.no_transaksi, produk.get_kode_produk()),
                     )
                 else:
-                    raise e  # Lempar ulang error jika bukan masalah duplikasi
+                    raise e  
         conn.commit()
 
 class Struk:
-    def __init__(self, no_struk, transaksi):
-        self.no_struk = no_struk
+    def __init__(self, transaksi, NIK_pegawai):
+        self.no_struk = f"ST{str(uuid.uuid4().int)[:3]}" 
         self.transaksi = transaksi
+        self.NIK_pegawai = NIK_pegawai
+        self.nama_pegawai = self.get_nama_pegawai(NIK_pegawai)
+
+    def get_nama_pegawai(self, NIK):
+        cur.execute("SELECT Nama_Pegawai FROM pegawai WHERE NIK = %s", (NIK,))
+        data = cur.fetchone()
+        if data:
+            return data[0]
+        else:
+            return "Pegawai Tidak Ditemukan"
 
     def cetak_struk(self):
-        self.no_struk = f"ST{str(uuid.uuid4()[:3])}"
         print("="*5 + "TOKO KUE BHARATA" + "="*5)
-        print(F"No Struk        : {self.no_struk}")
-        print(f"No Transaksi    : {self.transaksi.no_transaksi}")   
-        print(f"Nama Produk     : {self.transaksi.produk.nama_produk}")   
-        print(f"Jumlah Produk   : {self.transaksi.jumlah_produk}")   
-        print(f"Total Harga     : Rp. {self.transaksi.total_harga}")   
+        print(f"No Struk        : {self.no_struk}")
+        print(f"No Transaksi    : {self.transaksi.no_transaksi}")
+        for produk, jumlah in self.transaksi.produk_list:
+            print(f"Nama Produk     : {produk.nama_produk}")
+            print(f"Jumlah Produk   : {jumlah}")
+        print(f"Total Harga     : Rp. {self.transaksi.total_harga}")
         print(f"Nama Pegawai    : {self.nama_pegawai}")
         print("="*20)
+
+    def simpan_struk(self):
+        cur.execute("""INSERT INTO struk (No_Struk, NIK, No_Transaksi, Total_Harga) VALUES (%s, %s, %s, %s)""",
+                    (self.no_struk, self.NIK_pegawai, self.transaksi.no_transaksi, self.transaksi.total_harga))
+        conn.commit()
 
 def menu_produk():
     while True:
@@ -253,9 +268,18 @@ def menu_transaksi():
             pilih = int(input("Masukan Pilihan Menu : "))
 
             if pilih == 1:
+                NIK_pegawai = input("Masukkan NIK Pegawai yang Melakukan Transaksi: ")
+
+                # Mengecek apakah NIK pegawai valid
+                cur.execute("SELECT * FROM pegawai WHERE NIK = %s", (NIK_pegawai,))
+                pegawai = cur.fetchone()
+                if not pegawai:
+                    print("NIK Pegawai Tidak Ditemukan!")
+                    continue  #pegawai tidak ditemuksn
+
                 transaksi = Transaksi()
                 while True:
-                    kode_produk = str(input("Masukan Kode Produk (atau tekan Enter untuk selesai): "))
+                    kode_produk = input("Masukan Kode Produk (atau tekan Enter untuk selesai): ")
                     if kode_produk.strip() == "":
                         break
 
@@ -276,6 +300,11 @@ def menu_transaksi():
                     transaksi.tambah_transaksi()
                     print("TRANSAKSI BERHASIL DITAMBAHKAN!")
 
+                    # Membuat struk dan mencetaknya
+                    struk = Struk(transaksi=transaksi, NIK_pegawai=NIK_pegawai)  
+                    struk.cetak_struk() 
+                    struk.simpan_struk()  # simpan struk ke db
+
                 else:
                     print("TIDAK ADA PRODUK YANG DITAMBAHKAN DALAM TRANSAKSI.")
 
@@ -286,10 +315,10 @@ def menu_transaksi():
 
             elif pilih == 3:
                 return
-            
+
             else:
                 print("PILIHAN MENU TIDAK TERSEDIA!!")
-        
+
         except ValueError:
             print("INPUTAN SALAH SILAHKAN INPUT DENGAN ANGKA!!")
 
