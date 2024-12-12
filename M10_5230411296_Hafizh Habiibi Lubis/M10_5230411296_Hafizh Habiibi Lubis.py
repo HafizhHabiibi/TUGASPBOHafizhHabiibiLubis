@@ -29,12 +29,13 @@ cur = conn.cursor()
 #             Jenis_Produk VARCHAR(8),
 #             Harga INT(10))""")
 
-# membuat tabel transaksi
-# cur.execute("""CREATE TABLE Transaksi (
-#             No_Transaksi CHAR(7) NOT NULL PRIMARY KEY,
-#             Tanggal_Transaksi VARCHAR(20),
-#             Kode_Produk CHAR(5) NOT NULL,
+# #membuat tabel transaksi
+# cur.execute("""CREATE TABLE transaksi (
+#             No_Transaksi VARCHAR(10),
+#             Tanggal_Transaksi DATE,
+#             Kode_Produk VARCHAR(10),
 #             Jumlah_Produk INT(2),
+#             PRIMARY KEY (No_Transaksi, Kode_Produk),
 #             FOREIGN KEY (Kode_Produk) REFERENCES produk(Kode_Produk))""")
 
 # # membuat tabel struk membuat composite key 
@@ -106,18 +107,36 @@ class Produk:
         return self._kode_produk
 
 class Transaksi:
-    def __init__(self, produk, jumlah_produk):
+    def __init__(self):
         self.no_transaksi = f"TR{str(uuid.uuid4().int)[:5]}"
-        self.tanggal_transaksi = dt.date.today().strftime("%d-%m-%Y")
-        self.produk = produk
-        self.jumlah_produk = jumlah_produk
-        self.total_harga = produk.harga * jumlah_produk
+        self.tanggal_transaksi = dt.date.today().strftime("%Y-%m-%d")
+        self.produk_list = []  # List untuk menyimpan produk dan jumlah
+        self.total_harga = 0
+
+    def tambah_produk(self, produk, jumlah_produk):
+        self.produk_list.append((produk, jumlah_produk))
+        self.total_harga += produk.harga * jumlah_produk
 
     def tambah_transaksi(self):
-        cur.execute("""INSERT INTO transaksi (No_Transaksi, Tanggal_Transaksi, Kode_Produk, Jumlah_Produk) VALUES (%s, %s, %s, %s)""",
-            (self.no_transaksi, self.tanggal_transaksi, self.produk.get_kode_produk(), self.jumlah_produk))
+        for produk, jumlah in self.produk_list:
+            try:
+                cur.execute(
+                    """INSERT INTO transaksi (No_Transaksi, Tanggal_Transaksi, Kode_Produk, Jumlah_Produk)
+                    VALUES (%s, %s, %s, %s)""",
+                    (self.no_transaksi, self.tanggal_transaksi, produk.get_kode_produk(), jumlah),
+                )
+            except mysql.connector.IntegrityError as e:
+                if "Duplicate entry" in str(e):
+                    # Update jumlah jika produk sudah ada dalam transaksi
+                    cur.execute(
+                        """UPDATE transaksi
+                        SET Jumlah_Produk = Jumlah_Produk + %s
+                        WHERE No_Transaksi = %s AND Kode_Produk = %s""",
+                        (jumlah, self.no_transaksi, produk.get_kode_produk()),
+                    )
+                else:
+                    raise e  # Lempar ulang error jika bukan masalah duplikasi
         conn.commit()
-
 
 class Struk:
     def __init__(self, no_struk, transaksi):
@@ -234,20 +253,31 @@ def menu_transaksi():
             pilih = int(input("Masukan Pilihan Menu : "))
 
             if pilih == 1:
-                kode_produk = str(input("Masukan Kode Produk : "))
-                cur.execute("SELECT * FROM produk WHERE Kode_Produk =%s", (kode_produk,))
-                data_produk = cur.fetchone()
+                transaksi = Transaksi()
+                while True:
+                    kode_produk = str(input("Masukan Kode Produk (atau tekan Enter untuk selesai): "))
+                    if kode_produk.strip() == "":
+                        break
 
-                if data_produk:
-                    nama_produk, jenis_produk, harga = data_produk[1], data_produk[2], data_produk[3]
-                    produk = Produk(nama_produk, jenis_produk, harga)
-                    produk._kode_produk = kode_produk
-                    jumlah_produk = int(input("Masukan Jumlah Produk Yang Dibeli : "))
+                    cur.execute("SELECT * FROM produk WHERE Kode_Produk = %s", (kode_produk,))
+                    data_produk = cur.fetchone()
 
-                    transaksi = Transaksi(produk, jumlah_produk)
+                    if data_produk:
+                        nama_produk, jenis_produk, harga = data_produk[1], data_produk[2], data_produk[3]
+                        produk = Produk(nama_produk, jenis_produk, harga)
+                        produk._kode_produk = kode_produk
+                        jumlah_produk = int(input(f"Masukan Jumlah Produk: "))
+
+                        transaksi.tambah_produk(produk, jumlah_produk)
+                    else:
+                        print(f"PRODUK DENGAN KODE {kode_produk} TIDAK DITEMUKAN!")
+
+                if transaksi.produk_list:
                     transaksi.tambah_transaksi()
+                    print("TRANSAKSI BERHASIL DITAMBAHKAN!")
+
                 else:
-                    print("PRODUK TIDAK DITEMUKAN!")
+                    print("TIDAK ADA PRODUK YANG DITAMBAHKAN DALAM TRANSAKSI.")
 
             elif pilih == 2:
                 cur.execute("SELECT * FROM transaksi")
