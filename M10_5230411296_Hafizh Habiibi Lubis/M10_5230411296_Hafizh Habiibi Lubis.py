@@ -17,7 +17,7 @@ cur = conn.cursor()
 # # membuat database
 # cur.execute("CREATE DATABASE penjualan")
 
-# membuat tabel pegawai
+# #membuat tabel pegawai
 # cur.execute("""CREATE TABLE Pegawai (
 #             NIK CHAR(5) NOT NULL PRIMARY KEY,
 #             Nama_Pegawai VARCHAR(25),
@@ -309,7 +309,7 @@ def menu_pegawai():
                     nama_baru = str(input("Masukan Nama Baru Pegawai : "))
                     alamat_baru = str(input("Masukan Alamat baru Pegawai : "))
                     Pegawai.edit_pegawai(nama_baru, alamat_baru, NIK)
-                    print(f"Pegawai Dengan NIK {NIK} Berhasil Dihapus!")
+                    print(f"Pegawai Dengan NIK {NIK} Berhasil Diubah!")
                 else:
                     print(f"Pegawai Dengan NIK {NIK} Tidak Ditemukan!")
                 os.system("pause")
